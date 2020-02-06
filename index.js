@@ -4,6 +4,10 @@ const app = express()
 
 app.use(express.json())
 
+const cors = require('cors')
+app.use(cors())
+
+
 morgan.token('body', function (req, res) {
   if (req.method === 'POST') {
     return JSON.stringify(req.body)
@@ -11,7 +15,6 @@ morgan.token('body', function (req, res) {
     return ' '
   }
 })
-
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body' ))
 
 let persons = [
@@ -83,8 +86,15 @@ app.post('/api/persons', (req, res) => {
 
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
-  persons = persons.filter(person => person.id !== id)
-  response.status(204).end()
+  let removedPerson = {}
+  persons = persons.filter(person => {
+    if (person.id !== id) {
+      return true;
+    }
+    removedPerson = person
+    return false
+  })
+  res.json(removedPerson).status(200)
 })
 
 app.get('/info', (req, res) => {
