@@ -72,6 +72,22 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error))
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  console.log('jotain')
+  const body = req.body
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+  console.log(person)
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatetdPerson => {
+      res.json(updatetdPerson.toJSON())
+    })
+    .catch(error => next(error))
+})
+
 app.get('/info', (req, res) => {
   res.send(`
     <p>Phonebook has info for ${persons.length} people</p>
