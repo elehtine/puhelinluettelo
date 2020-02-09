@@ -45,7 +45,7 @@ app.get('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
   if (!body.name || !body.number) {
@@ -59,9 +59,11 @@ app.post('/api/persons', (req, res) => {
     number: body.number
   })
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson)
-  })
+  person.save()
+    .then(savedPerson => {
+      res.json(savedPerson)
+    })
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -73,13 +75,11 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-  console.log('jotain')
   const body = req.body
   const person = {
     name: body.name,
     number: body.number
   }
-  console.log(person)
 
   Person.findByIdAndUpdate(req.params.id, person, { new: true })
     .then(updatetdPerson => {
@@ -105,11 +105,15 @@ const errorHandler = (error, req, res, next) => {
   console.log(error.message)
 
   if (error.name === 'CastError' && error.kind == 'ObjectId') {
-    res.status(400).send('malformatted id')
+    return res.status(400).send('malformatted id')
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
   }
 
   next(error)
 }
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
