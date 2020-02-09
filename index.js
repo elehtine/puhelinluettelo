@@ -12,7 +12,7 @@ const cors = require('cors')
 app.use(cors())
 
 
-morgan.token('body', function (req, res) {
+morgan.token('body', (req) => {
   if (req.method === 'POST') {
     return JSON.stringify(req.body)
   } else {
@@ -22,10 +22,6 @@ morgan.token('body', function (req, res) {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body' ))
 
 
-const generateId = () => {
-  return Math.floor(Math.random() * 1000000)
-}
-
 app.get('/api/persons', (req, res) => {
   Person.find({}).then(people => {
     res.json(people.map(person => person.toJSON()))
@@ -33,7 +29,6 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
-  let person = {}
   Person.findById(req.params.id)
     .then(person => {
       if (person) {
@@ -68,7 +63,7 @@ app.post('/api/persons', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then(result => {
+    .then(() => {
       res.status(204).end()
     })
     .catch(error => next(error))
@@ -89,6 +84,8 @@ app.put('/api/persons/:id', (req, res, next) => {
 })
 
 app.get('/info', (req, res) => {
+  const persons = Person.find({})
+    .then(result => result.toJSON())
   res.send(`
     <p>Phonebook has info for ${persons.length} people</p>
     <p>${new Date()}</p>
@@ -104,7 +101,7 @@ app.use(unknownEndpoint)
 const errorHandler = (error, req, res, next) => {
   console.log(error.message)
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return res.status(400).send('malformatted id')
   } else if (error.name === 'ValidationError') {
     return res.status(400).json({ error: error.message })
